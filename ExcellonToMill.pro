@@ -12,7 +12,8 @@ SOURCES += \
     drillassignations.cpp \
     generate.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    scan.cpp
 
 HEADERS += \
     drillassignations.hpp \

@@ -34,6 +34,7 @@ private slots:
     void freeMovementSpeedChanged(int);
     void cuttingFeedrateChanged(int);
     void cuttingRPMChanged(int);
+    void plungeFeedRateChanged(int);
 private:
     Ui::MainWindow *ui;
 

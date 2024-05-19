@@ -3,12 +3,16 @@
 #include <QClipboard>
 #include <QDebug>
 #include <QSettings>
+#include <QShortcut>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_G), this, SLOT(buttonGenerateGCode()));
+    new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_S), this, SLOT(buttonCopyGCode()));
+
     connect(
         ui->buttonGenerateGCode, &QPushButton::clicked,
         this, &MainWindow::buttonGenerateGCode
@@ -44,7 +48,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(
         ui->cuttingRPM, &QSpinBox::valueChanged,
         this, &MainWindow::cuttingRPMChanged
-        );
+    );
+    connect(
+        ui->plungeFeedRate, &QSpinBox::valueChanged,
+        this, &MainWindow::plungeFeedRateChanged
+    );
     loadSettings();
 }
 
@@ -54,13 +62,15 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::buttonGenerateGCode(){
-    ui->statusbar->showMessage("hi!");
+
     scanExcellon();
+    generateGCode();
 }
 
 void MainWindow::buttonCopyGCode(){
     QClipboard* clipboard = QApplication::clipboard();
-    clipboard->setText("asdasd");
+    clipboard->setText(ui->millingCode->toPlainText());
+    ui->statusbar->showMessage("Copied!");
 }
 const QString settingsFileName = "exctomill.ini";
 void MainWindow::loadSettings(){
@@ -72,9 +82,10 @@ void MainWindow::loadSettings(){
     double toolDiameter = settings.value("toolDiameter", 2.0).toDouble();
     double perStepDepthOfCut = settings.value("perStepDepthOfCut", 0.5).toDouble();
     double totalDepth = settings.value("totalDepth", -2.5).toDouble();
-    int freeMovementSpeed = settings.value("freeMovementSpeed", 500).toDouble();
-    int cuttingFeedrate = settings.value("cuttingFeedrate", 500).toDouble();
-    int cuttingRPM = settings.value("cuttingRPM", 12000).toDouble();
+    int freeMovementSpeed = settings.value("freeMovementSpeed", 500).toInt();
+    int cuttingFeedrate = settings.value("cuttingFeedrate", 500).toInt();
+    int cuttingRPM = settings.value("cuttingRPM", 12000).toInt();
+    int plungeFeedRate = settings.value("plungeFeedRate", 50).toInt();
 
     ui->postProcessor->setCurrentText(postProcessor);
     ui->zSafeDistance->setValue(zSafeDistance);
@@ -84,6 +95,7 @@ void MainWindow::loadSettings(){
     ui->freeMovementSpeed->setValue(freeMovementSpeed);
     ui->cuttingFeedrate->setValue(cuttingFeedrate);
     ui->cuttingRPM->setValue(cuttingRPM);
+    ui->plungeFeedRate->setValue(plungeFeedRate);
 
     settings.sync();
 }
@@ -123,6 +135,10 @@ void MainWindow::cuttingRPMChanged(int newVal)
     saveSettings();
 }
 
+void MainWindow::plungeFeedRateChanged(int newVal){
+    saveSettings();
+}
+
 
 void MainWindow::saveSettings()
 {
@@ -136,6 +152,7 @@ void MainWindow::saveSettings()
     settings.setValue("freeMovementSpeed", ui->freeMovementSpeed->value());
     settings.setValue("cuttingFeedrate", ui->cuttingFeedrate->value());
     settings.setValue("cuttingRPM", ui->cuttingRPM->value());
+    settings.setValue("plungeFeedRate", ui->plungeFeedRate->value());
     settings.sync();
 }
 
