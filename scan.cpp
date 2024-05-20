@@ -4,7 +4,12 @@
 #include <QDebug>
 #include <QSettings>
 
-
+double extractCoordDivisor(const QString& codeLine){
+    if(codeLine.endsWith("TZ,000.000")){
+        return 1000.0;
+    }
+    return 1;
+}
 
 void MainWindow::scanExcellon(){
     QString excellonCode = ui->excellonCode->toPlainText();
@@ -15,6 +20,7 @@ void MainWindow::scanExcellon(){
     double factorToMm = 1.0;
     assignations.clear();
     tools.clear();
+    double coordDivisor = 1.0;
     while (stream.readLineInto(&codeLine)) {
         if(codeLine.startsWith(";")){
             //comment
@@ -57,10 +63,12 @@ void MainWindow::scanExcellon(){
                 //new tool definition
                 factorToMm = 25.4;
                 qDebug()<<"inch system!";
+                coordDivisor = extractCoordDivisor(codeLine);
             }else if(codeLine.startsWith("METRIC")){
                 //new tool definition
                 factorToMm = 1.0;
                 qDebug()<<"metric system!";
+                coordDivisor = extractCoordDivisor(codeLine);
             }
             else if(codeLine.startsWith("X")){
                 //new hole coordinate
@@ -69,8 +77,8 @@ void MainWindow::scanExcellon(){
                 QString xString = codeLine.mid(indexOfXCoord, indexOfYCoord-indexOfXCoord);
                 QString yString = codeLine.mid(indexOfYCoord+1, -1);
                 assignations[currentToolIndex].coordinates.push_back(QPointF(
-                    xString.toDouble()*factorToMm,
-                    yString.toDouble()*factorToMm
+                    xString.toDouble()*factorToMm/coordDivisor,
+                    yString.toDouble()*factorToMm/coordDivisor
                 ));
                 qDebug()<<"metric system!";
             }
